@@ -1,4 +1,4 @@
-from fastapi import Request, HTTPException
+from fastapi import Request
 from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 from utils import validate_jwt_token
@@ -12,16 +12,16 @@ class AuthMiddleware(BaseHTTPMiddleware):
             "/docs",
             "/redoc", 
             "/openapi.json",
-            "/api/v1/users/sign-up",
-            "/api/v1/users/login",
-            "/api/v1/posts/"
+            "/api/v1/users/",
+            "/api/v1/posts/",
         ]
     
     async def dispatch(self, request: Request, call_next):
         if request.method == "OPTIONS":
             return await call_next(request)
-        # Skip authentication for excluded paths
-        if request.url.path in self.exclude_paths:
+        
+        # Skip authentication for excluded paths (by prefix)
+        if any(request.url.path.startswith(path) for path in self.exclude_paths):
             return await call_next(request)
         
         # Check for Authorization header
@@ -46,10 +46,4 @@ class AuthMiddleware(BaseHTTPMiddleware):
                 }
             )
         
-        # Add user info to request state if needed
-        # You can decode the token here and add user data to request.state
-        
-        response = await call_next(request)
-        return response
-
-
+        return await call_next(request)

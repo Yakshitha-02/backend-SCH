@@ -2,6 +2,9 @@ import traceback
 import cloudinary
 import cloudinary.uploader
 import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # Get all required variables
 CLOUD_ENV = os.environ.get('CLOUDINARY_CLOUD_NAME')

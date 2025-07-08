@@ -13,15 +13,25 @@ app = FastAPI(
     version="1.0.0"
 )
 
+# Allow only frontend dev origins
+origins = [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000"
+]
+
+# 1️⃣ Add CORS middleware first
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Allow all origins
+    allow_origins=origins,
     allow_credentials=True,
-    allow_methods=["*"],  # Allow all methods
-    allow_headers=["*"],  # Allow all headers
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
-    
+
+# 2️⃣ Add AuthMiddleware next
 app.add_middleware(AuthMiddleware)
+
+# 3️⃣ Include routers
 app.include_router(user_router, prefix="/api/v1/users", tags=["users"])
 app.include_router(post_router, prefix="/api/v1/posts", tags=["posts"])
 app.include_router(comment_router, prefix="/api/v1/comments", tags=["comments"])

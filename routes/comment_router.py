@@ -1,35 +1,35 @@
-from fastapi import APIRouter, Header, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from models.comment import Comment
-from db import db
-from bson import ObjectId
-from utils import decode_jwt_token
+from db import comments_collection
 from datetime import datetime
-from uuid import uuid4
 
 router = APIRouter()
 
-@router.post("/create", response_model=dict)
-async def create_user(comment: Comment, Authorization: str = Header(None)):
-    post_exists = await db.posts.count_documents({"post_id": comment.post_id}) > 0
-    if not post_exists:
-        raise HTTPException(status_code=404, detail="Post not found")
-    user_data = decode_jwt_token(Authorization)
-    comment_data = comment.dict()
-    comment_data['comment_id'] = str(uuid4())
-    comment_data['created_at'] = datetime.now()
-    comment_data['created_by'] = user_data.get('email')
-    result = await db.comments.insert_one(comment_data)
-    if not result.acknowledged:
-        raise HTTPException(status_code=500, detail="Failed to create comment")
-    return {
-        "status": "success",
-        "message": "Comment created successfully",
-        "data": {
-            "id": str(result.inserted_id),
-            "post_id": comment.post_id,
-            "content": comment.content,
-            "created_by": comment_data['created_by'],
-            "created_at": comment_data['created_at']
-        }
-    }
+# Replace with your actual JWT auth dependency
+def get_current_user():
+    return "user@example.com"
 
+@router.post("/create")
+async def create_comment(comment: Comment, current_user: str = Depends(get_current_user)):
+    comment.created_by = current_user
+    comment.created_at = datetime.utcnow()
+
+    comment_dict = comment.dict()
+    if not comment_dict.get("comment_id"):
+        comment_dict.pop("comment_id", None)
+
+    result = await comments_collection.insert_one(comment_dict)
+    if not result.inserted_id:
+        raise HTTPException(status_code=500, detail="Failed to create comment")
+
+    return {"message": "Comment created", "id": str(result.inserted_id)}
+
+@router.get("/posts/{post_id}/comments")
+async def get_comments(post_id: str):
+    cursor = comments_collection.find({"post_id": post_id}).sort("created_at", -1)
+    comments = []
+    async for doc in cursor:
+        doc["comment_id"] = str(doc["_id"])
+        doc.pop("_id")
+        comments.append(doc)
+    return {"data": comments}

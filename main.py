@@ -16,7 +16,8 @@ app = FastAPI(
 # Allow only frontend dev origins
 origins = [
     "http://localhost:3000",
-    "http://127.0.0.1:3000"
+    "http://127.0.0.1:3000",
+    "https://frontendsch.netlify.app"
 ]
 
 # 1️⃣ Add CORS middleware first

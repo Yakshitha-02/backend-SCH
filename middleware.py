@@ -6,24 +6,18 @@ from utils import validate_jwt_token
 class AuthMiddleware(BaseHTTPMiddleware):
     def __init__(self, app, exclude_paths: list = None):
         super().__init__(app)
-        self.exclude_paths = exclude_paths or [
-            "/home",
-            "/docs",
-            "/redoc",
-            "/openapi.json",
-            "/api/v1/users"
-        ]
+        self.exclude_paths = exclude_paths or []
 
     async def dispatch(self, request: Request, call_next):
-        # ✅ Always let OPTIONS pass immediately (for CORS preflight)
+        # ✅ Let CORS preflight pass
         if request.method == "OPTIONS":
             return JSONResponse(status_code=200)
 
-        # ✅ Exclude certain paths (by prefix)
+        # ✅ Exclude certain paths by prefix
         if any(request.url.path.startswith(path) for path in self.exclude_paths):
             return await call_next(request)
 
-        # ✅ Require Authorization header
+        # ✅ Check Authorization header
         authorization = request.headers.get("Authorization")
         if not authorization:
             return JSONResponse(

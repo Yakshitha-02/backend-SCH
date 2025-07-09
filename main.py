@@ -13,7 +13,7 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# ✅ CORS middleware (first)
+# ✅ 1. CORS middleware FIRST
 origins = [
     "http://localhost:3000",
     "https://frontendsch.netlify.app"
@@ -27,14 +27,24 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# ✅ Auth middleware (second)
-app.add_middleware(AuthMiddleware)
+# ✅ 2. AuthMiddleware SECOND, with explicit exclude paths
+app.add_middleware(
+    AuthMiddleware,
+    exclude_paths=[
+        "/home",
+        "/docs",
+        "/redoc",
+        "/openapi.json",
+        "/api/v1/users"  # all /api/v1/users/* (login, sign-up)
+    ]
+)
 
-# ✅ Routers
+# ✅ 3. Routers
 app.include_router(user_router, prefix="/api/v1/users", tags=["users"])
 app.include_router(post_router, prefix="/api/v1/posts", tags=["posts"])
 app.include_router(comment_router, prefix="/api/v1/comments", tags=["comments"])
 
+# ✅ 4. Simple health check
 @app.get("/home", response_model=dict)
 async def home():
     return {"message": TEST_KEY}

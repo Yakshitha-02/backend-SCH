@@ -15,14 +15,15 @@ class AuthMiddleware(BaseHTTPMiddleware):
         ]
 
     async def dispatch(self, request: Request, call_next):
+        # ✅ Always let OPTIONS pass immediately (for CORS preflight)
         if request.method == "OPTIONS":
-            return await call_next(request)
+            return JSONResponse(status_code=200)
 
-        # Skip authentication for excluded paths (match by prefix)
+        # ✅ Exclude certain paths (by prefix)
         if any(request.url.path.startswith(path) for path in self.exclude_paths):
             return await call_next(request)
 
-        # Check Authorization header
+        # ✅ Require Authorization header
         authorization = request.headers.get("Authorization")
         if not authorization:
             return JSONResponse(
@@ -30,7 +31,7 @@ class AuthMiddleware(BaseHTTPMiddleware):
                 content={"status": "error", "message": "Authorization header is required"}
             )
 
-        # Validate token
+        # ✅ Validate token
         if not validate_jwt_token(authorization):
             return JSONResponse(
                 status_code=401,

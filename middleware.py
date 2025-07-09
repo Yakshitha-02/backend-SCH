@@ -11,8 +11,7 @@ class AuthMiddleware(BaseHTTPMiddleware):
             "/docs",
             "/redoc",
             "/openapi.json",
-            "/api/v1/users/login",
-            "/api/v1/users/sign-up"
+            "/api/v1/users"
         ]
 
     async def dispatch(self, request: Request, call_next):

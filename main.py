@@ -1,11 +1,11 @@
 import uvicorn
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from routes.user_router import router as user_router
 from routes.post_router import router as post_router
 from routes.comment_router import router as comment_router
-from env import TEST_KEY
 from middleware import AuthMiddleware
-from fastapi.middleware.cors import CORSMiddleware
+from env import TEST_KEY
 
 app = FastAPI(
     title="Student Collaboration App",
@@ -13,26 +13,25 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# Allow only frontend dev origins
+# ✅ CORSMiddleware (first)
 origins = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
     "https://frontendsch.netlify.app"
 ]
 
-# 1️⃣ Add CORS middleware first
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# 2️⃣ Add AuthMiddleware next
+# ✅ AuthMiddleware (second)
 app.add_middleware(AuthMiddleware)
 
-# 3️⃣ Include routers
+# ✅ Routers
 app.include_router(user_router, prefix="/api/v1/users", tags=["users"])
 app.include_router(post_router, prefix="/api/v1/posts", tags=["posts"])
 app.include_router(comment_router, prefix="/api/v1/comments", tags=["comments"])
